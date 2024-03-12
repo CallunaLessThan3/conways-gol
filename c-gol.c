@@ -5,14 +5,11 @@
 #include <raylib.h>
 
 
-// fairly certain i can jsut replace H/W withi size but ill keep it as an option .. 
 #define SCALE 10 // size of rectangles in pixels
-// somehow swapped height/width  . .. .
 #define HEIGHT 175 
 #define WIDTH 100
 
 int matrix[HEIGHT][WIDTH] = {0};
-
 
 void generate_random_matrix() {
     for (int x=0; x < HEIGHT; x++) {
@@ -23,6 +20,7 @@ void generate_random_matrix() {
 }
 
 
+// unused
 void print_matrix_values() {
     for (int x=0; x < HEIGHT; x++) {
         for (int y=0; y < WIDTH; y++) {
@@ -33,6 +31,7 @@ void print_matrix_values() {
 }
 
 
+// unused
 void display_matrix() {
     for (int x=0; x < HEIGHT; x++) {
         for (int y=0; y < WIDTH; y++) {
@@ -57,7 +56,7 @@ int wrap_num(int x, int size) {
 
 
 int count_neighbors(int x, int y) {
-    int neighbors = 0;
+    unsigned int neighbors = 0;
     for (int i=-1; i <= 1; i++) {
         for (int j=-1; j <= 1; j++) {
             int xpos = wrap_num(x+i, WIDTH);
@@ -83,7 +82,7 @@ void iterate_matrix() {
     int step[HEIGHT][WIDTH] = {0};
     for (int i=0; i < HEIGHT; i++) {
         for (int j=0; j < WIDTH; j++) {
-            int neighbors = count_neighbors(i, j);
+            unsigned int neighbors = count_neighbors(i, j);
             if (matrix[i][j]) {
                 if (neighbors == 2 || neighbors == 3) step[i][j] = 1;
                 else step[i][j] = 0;
@@ -101,9 +100,9 @@ void iterate_matrix() {
 void draw_frame() {
     for (int x=0; x < HEIGHT; x++) {
         for (int y=0; y < WIDTH; y++) {
-            int boxsize = SCALE;
-            int xpos = x*boxsize;
-            int ypos = y*boxsize;
+            unsigned int boxsize = SCALE;
+            unsigned int xpos = x*boxsize;
+            unsigned int ypos = y*boxsize;
             if (matrix[x][y]) {
                 DrawRectangle(xpos, ypos, boxsize, boxsize, GRAY);
             }
@@ -113,8 +112,8 @@ void draw_frame() {
 
 
 void add_rectangle(int xpos, int ypos) {
-    int ax = (xpos / SCALE);
-    int ay = (ypos / SCALE);
+    unsigned int ax = (xpos / SCALE);
+    unsigned int ay = (ypos / SCALE);
     (matrix[ax][ay]) ? (matrix[ax][ay] = 0) : (matrix[ax][ay] = 1);
 }
 
@@ -127,10 +126,10 @@ STATE KEY
 int state = 0;
 
 void start() {
-    // dont ask me about this ^-^
-    const int WINDOW_HEIGHT = WIDTH*SCALE;
-    const int WINDOW_WIDTH = HEIGHT*SCALE;
-    const int FPS = 15;
+    //swapped bc i used syntax of [height][width] to be more similar to matrices
+    const unsigned int WINDOW_HEIGHT = WIDTH*SCALE;
+    const unsigned int WINDOW_WIDTH = HEIGHT*SCALE;
+    const unsigned int FPS = 15;
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "C-gol");
     SetTargetFPS(FPS);
@@ -159,6 +158,7 @@ void start() {
             DrawText("E: Edit" , 0, 60, 20, BLACK);
             DrawText("G: Generate Random" , 0, 80, 20, BLACK);
 
+            // can do if(state) but less readable ..
             switch (state) {
                 case 0: //Editing
                     DrawText("State: Editing" , 0, 0, 20, BLACK);
@@ -168,6 +168,8 @@ void start() {
                     DrawText("State: Running" , 0, 0, 20, BLACK);
                     iterate_matrix();
                     break;
+                default:
+                    exit(1);
             }
 
 
