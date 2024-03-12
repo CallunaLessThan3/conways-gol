@@ -1,8 +1,15 @@
 CC=gcc
-RLFLAGS=-lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+CFLAGS=-lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+DEPS=main.h
+OBJ = main.o fileio.o
 
-c-gol:
-	$(CC) -o main c-gol.c $(RLFLAGS)
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+
+main: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -rf main
+	rm -rf *.o
+
