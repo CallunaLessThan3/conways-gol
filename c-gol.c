@@ -4,23 +4,17 @@
 #include <time.h>
 #include <raylib.h>
 
-/*
- 
 
-OUTLINE:
-    Represented by nxn matrix, where '#' is a living cell, and ' ' is a dead cell 
-*/
+// fairly certain i can jsut replace H/W withi size but ill keep it as an option .. 
+#define SCALE 10 // size of rectangles in pixels
+// somehow swapped height/width  . .. .
+#define HEIGHT 175 
+#define WIDTH 100
 
-#define SIZE 50
-#define HEIGHT SIZE
-#define WIDTH SIZE
-
-int matrix[HEIGHT][WIDTH];
+int matrix[HEIGHT][WIDTH] = {0};
 
 
-
-void init_matrix() {
-    srand(time(NULL));
+void generate_random_matrix() {
     for (int x=0; x < HEIGHT; x++) {
         for (int y=0; y < WIDTH; y++) {
             matrix[x][y] = rand() % 2;
@@ -86,12 +80,13 @@ int count_neighbors(int x, int y) {
     - Each dead cell with = 3 neighbors live
 */
 void iterate_matrix() {
-    int step[HEIGHT][WIDTH];
+    int step[HEIGHT][WIDTH] = {0};
     for (int i=0; i < HEIGHT; i++) {
         for (int j=0; j < WIDTH; j++) {
             int neighbors = count_neighbors(i, j);
             if (matrix[i][j]) {
-                if (neighbors < 2 || neighbors > 3) step[i][j] = 0;
+                if (neighbors == 2 || neighbors == 3) step[i][j] = 1;
+                else step[i][j] = 0;
             } else {
                 if (neighbors == 3) step[i][j] = 1;
             }
@@ -103,18 +98,87 @@ void iterate_matrix() {
 }
 
 
-int main() {
-    init_matrix();
-
-    char input;
-    for (;;) {
-        printf("input: ");
-        scanf("%c", &input);
-        if (input == 'q') break;
-        if (input == '\n') {
-            iterate_matrix();
-            display_matrix();
+void draw_frame() {
+    for (int x=0; x < HEIGHT; x++) {
+        for (int y=0; y < WIDTH; y++) {
+            int boxsize = SCALE;
+            int xpos = x*boxsize;
+            int ypos = y*boxsize;
+            if (matrix[x][y]) {
+                DrawRectangle(xpos, ypos, boxsize, boxsize, GRAY);
+            }
         }
     }
+}
+
+
+void add_rectangle(int xpos, int ypos) {
+    int ax = (xpos / SCALE);
+    int ay = (ypos / SCALE);
+    (matrix[ax][ay]) ? (matrix[ax][ay] = 0) : (matrix[ax][ay] = 1);
+}
+
+
+/*
+STATE KEY
+    0: Editing
+    1: Running
+*/
+int state = 0;
+
+void start() {
+    // dont ask me about this ^-^
+    const int WINDOW_HEIGHT = WIDTH*SCALE;
+    const int WINDOW_WIDTH = HEIGHT*SCALE;
+    const int FPS = 15;
+
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "C-gol");
+    SetTargetFPS(FPS);
+    SetExitKey('Q');
+
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            if (IsKeyPressed('R')) {
+                state = 1;
+            }
+            if (IsKeyPressed('E')) {
+                state = 0;
+            }
+            if (IsKeyPressed('G')) {
+                state = 0;
+                generate_random_matrix();
+            }
+
+
+            draw_frame();
+
+            DrawText("Keybinds: " , 0, 20, 20, BLACK);
+            DrawText("R: Run" , 0, 40, 20, BLACK);
+            DrawText("E: Edit" , 0, 60, 20, BLACK);
+            DrawText("G: Generate Random" , 0, 80, 20, BLACK);
+
+            switch (state) {
+                case 0: //Editing
+                    DrawText("State: Editing" , 0, 0, 20, BLACK);
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) add_rectangle(GetMouseX(), GetMouseY());
+                    break;
+                case 1: //Running
+                    DrawText("State: Running" , 0, 0, 20, BLACK);
+                    iterate_matrix();
+                    break;
+            }
+
+
+        EndDrawing();
+    }
+    CloseWindow();
+}
+
+
+int main() {
+    srand(time(0));
+    start();
     return 0;
 }
