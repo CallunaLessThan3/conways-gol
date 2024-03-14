@@ -1,10 +1,12 @@
-#define SCALE 10 // size of rectangles in pixels
-#define HEIGHT 100
-#define WIDTH 100
+#ifndef CGOL_H
+#define CGOL_H
 
-#ifndef FILE_IO
-#define FILE_IO
+// size of rectangles in pixels
+#define SCALE 100
+#define HEIGHT 10
+#define WIDTH 20
 
-void save_matrix();
+void save_matrix(int (*matrix)[HEIGHT][WIDTH]);
+int** load_matrix();
 
-#endif
+#endif /* CGOL_H */
