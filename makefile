@@ -11,5 +11,5 @@ main: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -rf *.o
+	rm -rf *.o main
 
