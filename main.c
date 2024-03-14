@@ -56,11 +56,8 @@ int count_neighbors(int xpos, int ypos) {
     unsigned int neighbors = 0;
     for (int y=-1; y <= 1; y++) {
         for (int x=-1; x <= 1; x++) {
-            // given pos, add offset, wrap number, index to array
             int yw = wrap_num(ypos+y, HEIGHT);
             int xw = wrap_num(xpos+x, WIDTH);
-            printf("ypos: %d, offset: %d, wrap: %d\n", ypos, y, yw);
-            printf("xpos: %d, offset: %d, wrap: %d\nval: %d\n\n", xpos, x, xw, matrix[yw][xw]);
             if (matrix[yw][xw]) {
                 neighbors++;
             }
@@ -95,6 +92,7 @@ void iterate_matrix() {
 }
 
 
+// TODO: put rendering in a separate file
 void add_rectangle(int xpos, int ypos) {
     unsigned int ax = (xpos / SCALE);
     unsigned int ay = (ypos / SCALE);
