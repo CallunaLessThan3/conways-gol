@@ -6,38 +6,36 @@
 #include <raylib.h>
 
 
-
-
 int matrix[HEIGHT][WIDTH] = {0};
 
 void generate_random_matrix() {
-    for (int x=0; x < HEIGHT; x++) {
-        for (int y=0; y < WIDTH; y++) {
-            matrix[x][y] = rand() % 2;
+    for (int y=0; y < HEIGHT; y++) {
+        for (int x=0; x < WIDTH; x++) {
+            matrix[y][x] = rand() % 2;
         }
     }
 }
 
 
-// unused
+// TESTING ONLY
 void print_matrix_values() {
-    for (int x=0; x < HEIGHT; x++) {
-        for (int y=0; y < WIDTH; y++) {
-            printf("%d", matrix[x][y]);
+    for (int y=0; y < HEIGHT; y++) {
+        for (int x=0; x < WIDTH; x++) {
+            printf("%d", matrix[y][x]);
         }
         printf("\n");
     }
 }
 
 
-// unused
+// TESTING ONLY
 void display_matrix() {
-    for (int x=0; x < HEIGHT; x++) {
-        for (int y=0; y < WIDTH; y++) {
+    for (int y=0; y < HEIGHT; y++) {
+        for (int x=0; x < WIDTH; x++) {
 
             // alternative is indexing into char[] that contains values
             char pixel;
-            if (matrix[x][y]) {
+            if (matrix[y][x]) {
                 pixel = '#';
             } else {
                 pixel = ' ';
@@ -49,25 +47,27 @@ void display_matrix() {
 }
 
 
-// small idea, if size > num given --> wrap
-int wrap_num(int x, int size) {
-    return ((x % size)+size)%size;
+int wrap_num(int num, int maxsize) {
+    return ((num % maxsize)+maxsize)%maxsize;
 }
 
 
-int count_neighbors(int x, int y) {
+int count_neighbors(int xpos, int ypos) {
     unsigned int neighbors = 0;
-    for (int i=-1; i <= 1; i++) {
-        for (int j=-1; j <= 1; j++) {
-            int xpos = wrap_num(x+i, WIDTH);
-            int ypos = wrap_num(y+j, HEIGHT);
-            if (matrix[xpos][ypos]) {
+    for (int y=-1; y <= 1; y++) {
+        for (int x=-1; x <= 1; x++) {
+            // given pos, add offset, wrap number, index to array
+            int yw = wrap_num(ypos+y, HEIGHT);
+            int xw = wrap_num(xpos+x, WIDTH);
+            printf("ypos: %d, offset: %d, wrap: %d\n", ypos, y, yw);
+            printf("xpos: %d, offset: %d, wrap: %d\nval: %d\n\n", xpos, x, xw, matrix[yw][xw]);
+            if (matrix[yw][xw]) {
                 neighbors++;
             }
         }
     }
 
-    if (matrix[x][y]) neighbors--;
+    if (matrix[ypos][xpos]) neighbors--;
     return neighbors;
 }
 
@@ -80,13 +80,13 @@ int count_neighbors(int x, int y) {
 */
 void iterate_matrix() {
     int step[HEIGHT][WIDTH] = {0};
-    for (int i=0; i < HEIGHT; i++) {
-        for (int j=0; j < WIDTH; j++) {
-            unsigned int neighbors = count_neighbors(i, j);
-            if (matrix[i][j]) {
-                (neighbors == 2 || neighbors == 3) ? (step[i][j] = 1) : (step[i][j] = 0);
+    for (int y=0; y < HEIGHT; y++) {
+        for (int x=0; x < WIDTH; x++) {
+            unsigned int neighbors = count_neighbors(x, y);
+            if (matrix[y][x]) {
+                (neighbors == 2 || neighbors == 3) ? (step[y][x] = 1) : (step[y][x] = 0);
             } else {
-                if (neighbors == 3) step[i][j] = 1;
+                if (neighbors == 3) step[y][x] = 1;
             }
 
         }
@@ -98,17 +98,17 @@ void iterate_matrix() {
 void add_rectangle(int xpos, int ypos) {
     unsigned int ax = (xpos / SCALE);
     unsigned int ay = (ypos / SCALE);
-    (matrix[ax][ay]) ? (matrix[ax][ay] = 0) : (matrix[ax][ay] = 1);
+    (matrix[ay][ax]) ? (matrix[ay][ax] = 0) : (matrix[ay][ax] = 1);
 }
 
 
 void draw_frame() {
-    for (int x=0; x < HEIGHT; x++) {
-        for (int y=0; y < WIDTH; y++) {
+    for (int y=0; y < HEIGHT; y++) {
+        for (int x=0; x < WIDTH; x++) {
             unsigned int boxsize = SCALE;
             unsigned int xpos = x*boxsize;
             unsigned int ypos = y*boxsize;
-            if (matrix[x][y]) {
+            if (matrix[y][x]) {
                 DrawRectangle(xpos, ypos, boxsize, boxsize, GRAY);
             }
         }
@@ -138,8 +138,6 @@ void check_key_pressed() {
         state = 0;
     }
     else if (IsKeyPressed('S')) {
-        // maybe define matrix in header file so it can be referenced instead
-        // of passed as an argument
         save_matrix();
     }
 }
@@ -150,11 +148,9 @@ STATES
     0: Editing
     1: Running
 */
-
 void start() {
-    //swapped bc i used syntax of [height][width] to be more similar to matrices
-    const unsigned int WINDOW_HEIGHT = WIDTH*SCALE;
-    const unsigned int WINDOW_WIDTH = HEIGHT*SCALE;
+    const unsigned int WINDOW_HEIGHT = HEIGHT*SCALE;
+    const unsigned int WINDOW_WIDTH = WIDTH*SCALE;
     const unsigned int FPS = 15;
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Conway's Game Of Life");
@@ -165,9 +161,7 @@ void start() {
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-
             check_key_pressed();
-
             draw_frame();
 
             DrawText("Keybinds: " , 0, 20, 20, BLACK);
