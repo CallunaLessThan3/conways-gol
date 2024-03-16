@@ -1,4 +1,5 @@
 #include "main.h"
+#include "dynarrs.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,12 +7,13 @@
 #include <raylib.h>
 
 
-int matrix[HEIGHT][WIDTH] = {0};
+int matrix[HEIGHT][WIDTH];
 
-void generate_random_matrix() {
-    for (int y=0; y < HEIGHT; y++) {
-        for (int x=0; x < WIDTH; x++) {
-            matrix[y][x] = rand() % 2;
+void generate_random_matrix(Dmatrix *matrix) {
+    for (int y=0; y < matrix->cursize; y++) {
+        for (int x=0; x < matrix->elements[0].cursize; x++) {
+            unsigned int val = rand() % 2;
+            dm_set(matrix, y, x, val);
         }
     }
 }
@@ -52,19 +54,20 @@ int wrap_num(int num, int maxsize) {
 }
 
 
-int count_neighbors(int xpos, int ypos) {
+// this feels wrong but i dont know ^-^
+int count_neighbors(Dmatrix *matrix, unsigned int ypos, unsigned int xpos) {
     unsigned int neighbors = 0;
     for (int y=-1; y <= 1; y++) {
         for (int x=-1; x <= 1; x++) {
-            int yw = wrap_num(ypos+y, HEIGHT);
-            int xw = wrap_num(xpos+x, WIDTH);
-            if (matrix[yw][xw]) {
+            int yw = wrap_num(ypos+y, matrix->cursize);
+            int xw = wrap_num(xpos+x, matrix->elements[0].cursize);
+            if (matrix->elements[yw].elements[xw]) {
                 neighbors++;
             }
         }
     }
 
-    if (matrix[ypos][xpos]) neighbors--;
+    if (matrix->elements[ypos].elements[xpos]) neighbors--;
     return neighbors;
 }
 
@@ -75,20 +78,22 @@ int count_neighbors(int xpos, int ypos) {
     - Each live cell with > 3 neighbors die
     - Each dead cell with = 3 neighbors live
 */
-void iterate_matrix() {
-    int step[HEIGHT][WIDTH] = {0};
-    for (int y=0; y < HEIGHT; y++) {
-        for (int x=0; x < WIDTH; x++) {
-            unsigned int neighbors = count_neighbors(x, y);
-            if (matrix[y][x]) {
-                (neighbors == 2 || neighbors == 3) ? (step[y][x] = 1) : (step[y][x] = 0);
+Dmatrix* iterate_matrix(Dmatrix *matrix) {
+    Dmatrix *step = init_Dmatrix(matrix->cursize, matrix->elements[0].cursize);
+    for (int y=0; y < matrix->cursize; y++) {
+        for (int x=0; x < matrix->elements[0].cursize; x++) {
+            unsigned int neighbors = count_neighbors(matrix, y, x);
+            unsigned int val = 0;
+            if (matrix->elements[y].elements[x]) {
+                if (neighbors == 2 || neighbors == 3) val = 1;
             } else {
-                if (neighbors == 3) step[y][x] = 1;
+                if (neighbors == 3) (val = 1);
             }
-
+            dm_set(step, y, x, val);
         }
     }
-    memcpy(matrix, step, sizeof(matrix));
+    free_Dmatrix(matrix);
+    return step;
 }
 
 
@@ -125,10 +130,10 @@ void check_key_pressed() {
     }
     else if (IsKeyPressed('G')) {
         state = 0;
-        generate_random_matrix();
+        //generate_random_matrix();
     }
     else if (IsKeyPressed('N') && state == 0) {
-        iterate_matrix();
+        //iterate_matrix();
     }
     else if (IsKeyPressed('C')) {
     int empty[HEIGHT][WIDTH] = {0};
@@ -136,7 +141,7 @@ void check_key_pressed() {
         state = 0;
     }
     else if (IsKeyPressed('S')) {
-        save_matrix();
+        //TODO: save_matrix(matrix);
     }
 }
 
@@ -175,7 +180,7 @@ void start() {
                     break;
                 case 1: //Running
                     DrawText("State: Running" , 0, 0, 20, BLACK);
-                    iterate_matrix();
+                    //iterate_matrix();
                     break;
                 default:
                     exit(1);
@@ -187,9 +192,31 @@ void start() {
     CloseWindow();
 }
 
+/***** DYNAMIC MATRIX TESTING *****/
+
+
+
 
 int main() {
     srand(time(0));
-    start();
+
+    Dmatrix *mtx = init_Dmatrix(10, 10);
+
+    dm_set(mtx, 0, 1, 1);
+    dm_set(mtx, 1, 2, 1);
+    dm_set(mtx, 2, 0, 1);
+    dm_set(mtx, 2, 1, 1);
+    dm_set(mtx, 2, 2, 1);
+    print_Dmatrix(mtx);
+
+    mtx = iterate_matrix(mtx);
+    printf("----------\n");
+    print_Dmatrix(mtx);
+
+    mtx = iterate_matrix(mtx);
+    printf("----------\n");
+    print_Dmatrix(mtx);
+
+
     return 0;
 }
